@@ -6,7 +6,6 @@ import ui.board.Status
 import java.awt.Color
 import java.awt.event.ActionEvent
 import java.awt.event.ActionListener
-import java.util.*
 
 enum class Player {
     MIN_MAX, ALFA_BETA, HUMAN
@@ -32,12 +31,12 @@ class Stratego : ActionListener {
         if (field.isEmpty && isHumanTurn()) {
             val move = getXYOfField(field)
             if (move != null) {
+                makeMove(move)
                 if (isRedPlayerTurn) {
                     redPoints += StrategoUtil.calculatePoints(move, simpleBoard)
                 } else {
                     bluePoints += StrategoUtil.calculatePoints(move, simpleBoard)
                 }
-                makeMove(move)
             }
             isRedPlayerTurn = !isRedPlayerTurn
             moveCount++
@@ -54,16 +53,17 @@ class Stratego : ActionListener {
                     Player.MIN_MAX -> nextMove = minMax()
                     Player.ALFA_BETA -> nextMove = alphaBeta()
                 }
-                redPoints += StrategoUtil.calculatePoints(nextMove!!, simpleBoard)
+                makeMove(nextMove!!)
+                redPoints += StrategoUtil.calculatePoints(nextMove, simpleBoard)
             } else {
                 when (playerBlueType) {
                     Player.MIN_MAX -> nextMove = minMax()
                     Player.ALFA_BETA -> nextMove = alphaBeta()
                 }
-                bluePoints += StrategoUtil.calculatePoints(nextMove!!, simpleBoard)
+                makeMove(nextMove!!)
+                bluePoints += StrategoUtil.calculatePoints(nextMove, simpleBoard)
             }
-            makeMove(nextMove)
-            System.out.println("RedPoints: " + redPoints + " Blue Points: " + bluePoints)
+            printStateOfGame()
             isRedPlayerTurn = !isRedPlayerTurn
             moveCount++
         }
@@ -71,12 +71,13 @@ class Stratego : ActionListener {
 
     fun updateBoard(board: Array<Array<Field>>) {
         this.board = board
-        simpleBoard = Array(board.size) { IntArray(board.size) {0} }
+        simpleBoard = Array(board.size) { IntArray(board.size) { 0 } }
         for (x in board.indices) {
             for (y in board.indices) {
                 board[x][y].addActionListener(this)
             }
         }
+        resumeGame()
     }
 
     fun updatePlayers(player1: Player, player2: Player) {
@@ -90,7 +91,7 @@ class Stratego : ActionListener {
         isRedPlayerTurn = true
         redPoints = 0
         bluePoints = 0
-        simpleBoard = Array(board.size) { IntArray(board.size) {0} }
+        simpleBoard = Array(board.size) { IntArray(board.size) { 0 } }
         for (x in board.indices) {
             for (y in board.indices) {
                 board[x][y].isEmpty = true
@@ -112,50 +113,95 @@ class Stratego : ActionListener {
     }
 
     private fun minMax(): Pair<Int, Int> {
-        return maxMove(deepCopy(simpleBoard), 0)
+        val node = maxMove(Node(simpleBoard), 0)
+        return node.move
     }
 
-    private fun maxMove(board: Array<IntArray>, depth: Int): Pair<Int, Int> {
-        var listOfPossibleMoves = getPossibleMoves(board)
-        var bestMove = getRandomMove(listOfPossibleMoves)
-        if (isLastPossibleMove(board) || depth == MAX_DEPTH_LEVEL) {
-            for (move in listOfPossibleMoves) {
-                if (value(bestMove, board) < value(move, board)) {
-                    bestMove = move
-                }
-            }
-            return bestMove
-        } else {
-            for (move in listOfPossibleMoves) {
-                val tempMove = minMove(makeMove(deepCopy(board), move), depth + 1)
-                if (value(tempMove, board) > value(bestMove, board)) {
-                    bestMove = tempMove
-                }
-            }
-            return bestMove
+
+    private fun maxMove(node: Node, depth: Int): Node {
+        var bestMaxNode: Node? = null
+        if(isLastPossibleMove(depth)){
+            return node.getChildren()[0]
         }
+        if (depth == MAX_DEPTH_LEVEL) {
+            return node
+        } else {
+            for (child in node.getChildren()) {
+                val candidateNode = minMove(child, depth + 1)
+                if (bestMaxNode == null)
+                    bestMaxNode = candidateNode
+                else if (bestMaxNode.getValue() < candidateNode.getValue()) {
+                    bestMaxNode = candidateNode
+                }
+            }
+        }
+        return bestMaxNode!!
     }
 
-    private fun minMove(board: Array<Array<Field>>, depth: Int): Pair<Int, Int> {
-        var listOfPossibleMoves = getPossibleMoves(board)
-        var bestMove = getRandomMove(listOfPossibleMoves)
-        if (isLastPossibleMove(board) || depth == MAX_DEPTH_LEVEL) {
-            for (move in listOfPossibleMoves) {
-                if (value(bestMove, board) > value(move, board)) {
-                    bestMove = move
-                }
-            }
-            return bestMove
-        } else {
-            for (move in listOfPossibleMoves) {
-                val tempMove = maxMove(makeMove(deepCopy(board), move), depth + 1)
-                if (value(tempMove, board) < value(bestMove, board)) {
-                    bestMove = tempMove
-                }
-            }
-            return bestMove
+    private fun minMove(node: Node, depth: Int): Node {
+        var bestMinNode: Node? = null
+        if(isLastPossibleMove(depth)){
+            return node.getChildren()[0]
         }
+        if (depth == MAX_DEPTH_LEVEL) {
+            return node
+        } else {
+            for (child in node.getChildren()) {
+                val candidateNode = maxMove(child, depth + 1)
+                if(bestMinNode == null)
+                    bestMinNode = candidateNode
+                else if (bestMinNode.getValue() > candidateNode.getValue())
+                    bestMinNode = candidateNode
+            }
+        }
+        return bestMinNode!!
     }
+//
+//    private fun minMax(): Pair<Int, Int> {
+//        return maxMove(deepCopy(simpleBoard), 0)
+//    }
+//
+//    private fun maxMove(board: Array<IntArray>, depth: Int): Pair<Int, Int> {
+//        var listOfPossibleMoves = getPossibleMoves(board)
+//        var bestMove = getRandomMove(listOfPossibleMoves)
+//        if (isLastPossibleMove(board) || depth == MAX_DEPTH_LEVEL) {
+//            for (move in listOfPossibleMoves) {
+//                if (value(bestMove, board) < value(move, board)) {
+//                    bestMove = move
+//                }
+//            }
+//            return bestMove
+//        } else {
+//            for (move in listOfPossibleMoves) {
+//                val tempMove = minMove(makeMove(deepCopy(board), move), depth + 1)
+//                if (value(tempMove, board) > value(bestMove, board)) {
+//                    bestMove = tempMove
+//                }
+//            }
+//            return bestMove
+//        }
+//    }
+//
+//    private fun minMove(board: Array<Array<Field>>, depth: Int): Pair<Int, Int> {
+//        var listOfPossibleMoves = getPossibleMoves(board)
+//        var bestMove = getRandomMove(listOfPossibleMoves)
+//        if (isLastPossibleMove(board) || depth == MAX_DEPTH_LEVEL) {
+//            for (move in listOfPossibleMoves) {
+//                if (value(bestMove, board) > value(move, board)) {
+//                    bestMove = move
+//                }
+//            }
+//            return bestMove
+//        } else {
+//            for (move in listOfPossibleMoves) {
+//                val tempMove = maxMove(makeMove(deepCopy(board), move), depth + 1)
+//                if (value(tempMove, board) < value(bestMove, board)) {
+//                    bestMove = tempMove
+//                }
+//            }
+//            return bestMove
+//        }
+//    }
 
     private fun deepCopy(array: Array<Array<Field>>): Array<Array<Field>> {
         val result = Array(array.size) { Array(array.size) { Field() } }
@@ -169,12 +215,16 @@ class Stratego : ActionListener {
         return result
     }
 
-    private fun deepCopy(array: Array<IntArray>): Array<IntArray>{
-        val result = Array(array.size) { IntArray(array.size) {0} }
-        for(i in array.indices){
+    private fun deepCopy(array: Array<IntArray>): Array<IntArray> {
+        val result = Array(array.size) { IntArray(array.size) { 0 } }
+        for (i in array.indices) {
             result[i] = array[i].clone()
         }
         return result
+    }
+
+    private fun isLastPossibleMove(depth: Int): Boolean {
+        return moveCount + depth == board.size * board.size - 1
     }
 
     private fun isLastPossibleMove(board: Array<Array<Field>>): Boolean {
@@ -186,7 +236,6 @@ class Stratego : ActionListener {
         }
         return moveCount <= 1
     }
-
 
 
     private fun makeMove(move: Pair<Int, Int>) {
@@ -210,78 +259,79 @@ class Stratego : ActionListener {
     //ALFA BETA
 
     fun alphaBeta(): Pair<Int, Int> {
-        return alphaBeta(board, Int.MIN_VALUE, Int.MAX_VALUE, true, 0)!!
+        return Pair(1, 1)
+//        return alphaBeta(board, Int.MIN_VALUE, Int.MAX_VALUE, true, 0)!!
     }
 
-    fun alphaBeta(board: Array<Array<Field>>, alpha: Int, beta: Int, maximisingPlayer: Boolean, depth: Int): Pair<Int, Int>? {
-        val possibleMoves = getPossibleMoves(board)
-        if (possibleMoves.size == 1) {
-            return possibleMoves[0]
-        }
-        var bestMove: Pair<Int, Int>? = null
-        var bestMoveValue: Int
-
-        if (maximisingPlayer) {
-            bestMoveValue = alpha
-
-            if (depth == MAX_DEPTH_LEVEL) {
-                var lastDepthMove = getRandomMove(possibleMoves)
-                var lastDepthMoveValue = value(lastDepthMove, board)
-                for (move in possibleMoves) {
-                    val childBestValue = value(move, board)
-                    if (lastDepthMoveValue < childBestValue) {
-                        lastDepthMove = move
-                        lastDepthMoveValue = childBestValue
-                    }
-                }
-                return lastDepthMove
-            } else {
-                loop@ for (move in possibleMoves) {
-                    val childBestMove = alphaBeta(makeMove(deepCopy(board), move), bestMoveValue, beta, false, depth + 1)
-                    if (childBestMove != null) {
-                        val childMoveValue = value(childBestMove, board)
-                        if (bestMoveValue <= childMoveValue) {
-                            bestMove = childBestMove
-                            bestMoveValue = childMoveValue
-                        }
-                        if (beta <= bestMoveValue) {
-                            break@loop
-                        }
-                    }
-                }
-            }
-        } else {
-            bestMoveValue = beta
-
-            if (depth == MAX_DEPTH_LEVEL) {
-                var lastDepthMove = getRandomMove(possibleMoves)
-                var lastDepthMoveValue = value(lastDepthMove, board)
-                for (move in possibleMoves) {
-                    val childBestValue = value(move, board)
-                    if (lastDepthMoveValue > childBestValue) {
-                        lastDepthMove = move
-                        lastDepthMoveValue = childBestValue
-                    }
-                }
-                return lastDepthMove
-            } else {
-                loop@ for (move in possibleMoves) {
-                    val childBestMove = alphaBeta(makeMove(deepCopy(board), move), alpha, bestMoveValue, true, depth + 1)
-                    if (childBestMove != null) {
-                        val childMoveValue = value(childBestMove, board)
-                        if (bestMoveValue >= childMoveValue) {
-                            bestMove = childBestMove
-                            bestMoveValue = childMoveValue
-                        }
-                        if (bestMoveValue <= alpha) {
-                            break@loop
-                        }
-                    }
-                }
-            }
-        }
-        return bestMove
-    }
+//    fun alphaBeta(board: Array<Array<Field>>, alpha: Int, beta: Int, maximisingPlayer: Boolean, depth: Int): Pair<Int, Int>? {
+//        val possibleMoves = getPossibleMoves(board)
+//        if (possibleMoves.size == 1) {
+//            return possibleMoves[0]
+//        }
+//        var bestMove: Pair<Int, Int>? = null
+//        var bestMoveValue: Int
+//
+//        if (maximisingPlayer) {
+//            bestMoveValue = alpha
+//
+//            if (depth == MAX_DEPTH_LEVEL) {
+//                var lastDepthMove = getRandomMove(possibleMoves)
+//                var lastDepthMoveValue = value(lastDepthMove, board)
+//                for (move in possibleMoves) {
+//                    val childBestValue = value(move, board)
+//                    if (lastDepthMoveValue < childBestValue) {
+//                        lastDepthMove = move
+//                        lastDepthMoveValue = childBestValue
+//                    }
+//                }
+//                return lastDepthMove
+//            } else {
+//                loop@ for (move in possibleMoves) {
+//                    val childBestMove = alphaBeta(makeMove(deepCopy(board), move), bestMoveValue, beta, false, depth + 1)
+//                    if (childBestMove != null) {
+//                        val childMoveValue = value(childBestMove, board)
+//                        if (bestMoveValue <= childMoveValue) {
+//                            bestMove = childBestMove
+//                            bestMoveValue = childMoveValue
+//                        }
+//                        if (beta <= bestMoveValue) {
+//                            break@loop
+//                        }
+//                    }
+//                }
+//            }
+//        } else {
+//            bestMoveValue = beta
+//
+//            if (depth == MAX_DEPTH_LEVEL) {
+//                var lastDepthMove = getRandomMove(possibleMoves)
+//                var lastDepthMoveValue = value(lastDepthMove, board)
+//                for (move in possibleMoves) {
+//                    val childBestValue = value(move, board)
+//                    if (lastDepthMoveValue > childBestValue) {
+//                        lastDepthMove = move
+//                        lastDepthMoveValue = childBestValue
+//                    }
+//                }
+//                return lastDepthMove
+//            } else {
+//                loop@ for (move in possibleMoves) {
+//                    val childBestMove = alphaBeta(makeMove(deepCopy(board), move), alpha, bestMoveValue, true, depth + 1)
+//                    if (childBestMove != null) {
+//                        val childMoveValue = value(childBestMove, board)
+//                        if (bestMoveValue >= childMoveValue) {
+//                            bestMove = childBestMove
+//                            bestMoveValue = childMoveValue
+//                        }
+//                        if (bestMoveValue <= alpha) {
+//                            break@loop
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        return bestMove
+//    }
 
     private fun printStateOfGame() {
         System.out.println("Move: $moveCount RedPoints: $redPoints Blue Points: $bluePoints")

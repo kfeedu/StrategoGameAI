@@ -59,12 +59,11 @@ class StrategoUtil {
             return true
         }
 
-        private fun getRandomMove(list: List<Pair<Int, Int>>): Pair<Int, Int> {
-            val rnd = Random()
-            return list[rnd.nextInt(list.size)]
+        fun getRandomMove(list: List<Pair<Int, Int>>): Pair<Int, Int> {
+            return list[Random().nextInt(list.size)]
         }
 
-        private fun getPossibleMoves(board: Array<IntArray>): List<Pair<Int, Int>> {
+        fun getPossibleMoves(board: Array<IntArray>): List<Pair<Int, Int>> {
             val moveList = mutableListOf<Pair<Int, Int>>()
             for (x in board.indices) {
                 for (y in board.indices) {

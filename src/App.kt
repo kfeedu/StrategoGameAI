@@ -1,3 +1,4 @@
+import game.StrategoUtil
 import ui.MainWindow
 import ui.board.BoardPanel
 import ui.settings.SettingsPanel
@@ -13,5 +14,8 @@ class App {
         mainWindow.add(settingsPanel, BorderLayout.LINE_END)
         mainWindow.add(boardPanel, BorderLayout.CENTER)
         mainWindow.pack()
+
+//        val testArray = arrayOf(intArrayOf(1, 1,-1), intArrayOf(0,0,0), intArrayOf(0, 0, 0))
+//        System.out.println(StrategoUtil.calculatePoints(Pair(0,1), testArray))
     }
 }
