@@ -8,11 +8,8 @@ enum class Status {
     BLUE
 }
 
-class Field() : JButton() {
+class Field : JButton() {
 
-    constructor(isEmpty: Boolean) : this() {
-        this.isEmpty = isEmpty
-    }
     var isEmpty = true
     lateinit var status: Status
 
@@ -21,16 +18,16 @@ class Field() : JButton() {
         isOpaque = true
     }
 
-    fun changeStatus(status: Status){
-        if(isEmpty){
+    fun changeStatus(status: Status) {
+        if (isEmpty) {
             this.status = status
             isEmpty = false
-            background = when(status){
+            background = when (status) {
                 Status.RED -> Color.RED
                 Status.BLUE -> Color.BLUE
             }
             isOpaque = true
-        }else{
+        } else {
             throw IllegalStateException("Field is already taken")
         }
     }

@@ -25,7 +25,6 @@ class SettingsPanel(private val listener: SettingsListener) : JPanel(), ActionLi
         preferredSize = Dimension(SETTINGS_WIDTH, SETTINGS_HEIGHT)
         layout = GridBagLayout()
         createGUI()
-
     }
 
     interface SettingsListener {
@@ -35,13 +34,13 @@ class SettingsPanel(private val listener: SettingsListener) : JPanel(), ActionLi
     }
 
     override fun actionPerformed(e: ActionEvent) {
-        if(e.source is JButton){
+        if (e.source is JButton) {
             resetButtonsColor()
             (e.source as JButton).background = Color.GREEN
         }
         when (e.source) {
             sizeBtn -> {
-                if(sizeTextField.text.isNotEmpty() && sizeTextField.text.toInt() > 0){
+                if (sizeTextField.text.isNotEmpty() && sizeTextField.text.toInt() > 0) {
                     listener.updateSize(sizeTextField.text.toInt())
                 }
             }

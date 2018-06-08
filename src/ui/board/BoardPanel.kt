@@ -18,7 +18,6 @@ class BoardPanel : JPanel(), SettingsPanel.SettingsListener {
 
     val gameManager = Stratego()
 
-
     init {
         preferredSize = Dimension(BOARD_WIDTH, BOARD_HEIGHT)
         layout = GridBagLayout()
@@ -29,12 +28,12 @@ class BoardPanel : JPanel(), SettingsPanel.SettingsListener {
         removeAll()
         val constraints = GridBagConstraints()
         constraints.fill = GridBagConstraints.HORIZONTAL
-        fieldsArray = Array(boardSize) {Array(boardSize) {Field()}}
+        fieldsArray = Array(boardSize) { Array(boardSize) { Field() } }
 
-        if(fieldsArray.isNotEmpty()){
+        if (fieldsArray.isNotEmpty()) {
             val fieldSize = calculateFieldSize()
-            for(x in fieldsArray.indices){
-                for(y in fieldsArray.indices){
+            for (x in fieldsArray.indices) {
+                for (y in fieldsArray.indices) {
                     constraints.gridx = x
                     constraints.gridy = y
                     fieldsArray[x][y] = Field()

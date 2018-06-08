@@ -7,13 +7,18 @@ class Node(
         var minPoints: Int,
         var move: Pair<Int, Int>) {
 
-    var bestValue: Int
-
     constructor(board: Array<IntArray>) : this(board, false, 0, 0, Pair(-1, -1))
 
+    companion object {
+        var countNodeCreation = 0
+    }
+
+    var bestValue: Int
+
     init {
+        countNodeCreation++
         //storing last move and adding points
-        if(move.first >= 0){
+        if (move.first >= 0) {
             if (wasMaxPlayerTurn) {
                 board[move.first][move.second] = 1
                 maxPoints += StrategoUtil.calculatePoints(move, board)
@@ -35,19 +40,6 @@ class Node(
             children.add(Node(board.deepCopy(), !wasMaxPlayerTurn, maxPoints, minPoints, move))
         }
         return children
-    }
-
-    fun getMaxChildNode(): Node {
-        var bestMove: Pair<Int, Int>? = null
-        var bestPoints = -1
-        for (move in possibleMoves) {
-            val movePoints = StrategoUtil.calculatePoints(move, board)
-            if (movePoints > bestPoints) {
-                bestMove = move
-                bestPoints = movePoints
-            }
-        }
-        return Node(board.deepCopy(), !wasMaxPlayerTurn, maxPoints, minPoints, bestMove!!)
     }
 
     private fun Array<IntArray>.deepCopy(): Array<IntArray> {
